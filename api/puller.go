@@ -36,7 +36,7 @@ func login() *gocronometer.Client {
 
 		err_2 := json.Unmarshal(b, &u)
 		if err_2 != nil {
-			fmt.Println(err.Error())
+			fmt.Println(err_2.Error())
 			return nil
 		}
 		username = u.CRONPULLER_USERNAME
