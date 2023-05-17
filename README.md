@@ -4,6 +4,8 @@ Installation:
 
 `git clone https://github.com/Neurosage/cron-puller.git`
 
+`cd cron-puller`
+
 `pip install -r requirements.txt`
 
 Requirements: golang

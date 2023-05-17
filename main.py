@@ -7,7 +7,7 @@ import argparse
 def pull_and_update(days=0):
     subprocess.run("cd api && go run puller.go -d {}".format(days), shell=True)
 
-    gc = gspread.service_account()
+    gc = gspread.oauth()
 
     sh = gc.open("Weight")
 
