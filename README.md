@@ -1,3 +1,14 @@
+A script to pull kcal consumption from Cronometer and sync it to a Google Sheets spreadsheet
+
+Installation:
+`git clone https://github.com/Neurosage/cron-puller.git`
+`pip install -r requirements.txt`
+
+Requirements: golang
+
+Usage: `python main.py`
+Arguments: `-d`, `--days`: The number of previous days, starting from today (0), to pull data for (default 0)
+
 Cron puller will look for a user.json file in the installation directory with the following format:
 
 
