@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -9,10 +10,43 @@ import (
 	"github.com/jrmycanady/gocronometer"
 )
 
+type User struct {
+	CRONPULLER_USERNAME string
+	CRONPULLER_PASSWORD string
+}
+
 func login() *gocronometer.Client {
 	var c = gocronometer.NewClient(nil)
-	var username = os.Getenv("CRONPULLER_USERNAME")
-	var password = os.Getenv("CRONPULLER_PASSWORD")
+
+	// look for user.json
+	var username = ""
+	var password = ""
+	var userfile = "./user.json"
+
+	if _, err := os.Stat(userfile); err == nil {
+		// file exists
+		fmt.Println("user.json exists")
+		var u User
+		b, err_1 := os.ReadFile(userfile)
+		if err_1 != nil {
+			fmt.Println(err.Error())
+			return nil
+		}
+
+		err_2 := json.Unmarshal(b, &u)
+		if err_2 != nil {
+			fmt.Println(err.Error())
+			return nil
+		}
+		username = u.CRONPULLER_USERNAME
+		password = u.CRONPULLER_PASSWORD
+	} else if os.IsNotExist(err) {
+		// file does not exist
+		fmt.Println("user.json does not exist")
+		username = os.Getenv("CRONPULLER_USERNAME")
+		password = os.Getenv("CRONPULLER_PASSWORD")
+	}
+
 	var err = c.Login(context.Background(), username, password)
 
 	if err != nil {
@@ -31,6 +65,21 @@ func get_raw_data(c *gocronometer.Client) {
 	}
 
 	fmt.Println(rawCSV)
+	var timestamp = time.Now().Format("20060102")
+	var filename = fmt.Sprintf("./data/%s.csv", timestamp)
+	// check if data directory exists
+	if _, err := os.Stat("./data"); os.IsNotExist(err) {
+		// data directory does not exist
+		fmt.Println("data directory does not exist")
+		os.Mkdir("./data", 0755)
+	}
+
+	err = os.WriteFile(filename, []byte(rawCSV), 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer c.Logout(context.Background())
 
 }
 
