@@ -67,7 +67,6 @@ func get_raw_data(c *gocronometer.Client, d int) {
 		return
 	}
 
-	fmt.Println(rawCSV)
 	var timestamp = time.Now().Format("20060102")
 	var filename = fmt.Sprintf("../data/%s.csv", timestamp)
 	// check if data directory exists
@@ -87,7 +86,7 @@ func get_raw_data(c *gocronometer.Client, d int) {
 
 func main() {
 
-	var dFlag = flag.Int("d", 1, "Cronpuller will get the previous d days of data, including today.")
+	var dFlag = flag.Int("d", 0, "Cronpuller will get the previous d days of data, including today.")
 
 	flag.Parse()
 
