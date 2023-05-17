@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -21,7 +22,7 @@ func login() *gocronometer.Client {
 	// look for user.json
 	var username = ""
 	var password = ""
-	var userfile = "./user.json"
+	var userfile = "../user.json"
 
 	if _, err := os.Stat(userfile); err == nil {
 		// file exists
@@ -57,8 +58,10 @@ func login() *gocronometer.Client {
 	return c
 }
 
-func get_raw_data(c *gocronometer.Client) {
-	rawCSV, err := c.ExportDailyNutrition(context.Background(), time.Now(), time.Now().Add(time.Hour*24))
+func get_raw_data(c *gocronometer.Client, d int) {
+	var start = time.Now().Add(time.Hour * 24 * time.Duration(-d))
+	var end = time.Now().Add(time.Hour * 24)
+	rawCSV, err := c.ExportDailyNutrition(context.Background(), start, end)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -66,12 +69,11 @@ func get_raw_data(c *gocronometer.Client) {
 
 	fmt.Println(rawCSV)
 	var timestamp = time.Now().Format("20060102")
-	var filename = fmt.Sprintf("./data/%s.csv", timestamp)
+	var filename = fmt.Sprintf("../data/%s.csv", timestamp)
 	// check if data directory exists
-	if _, err := os.Stat("./data"); os.IsNotExist(err) {
-		// data directory does not exist
+	if _, err := os.Stat("../data"); os.IsNotExist(err) {
 		fmt.Println("data directory does not exist")
-		os.Mkdir("./data", 0755)
+		os.Mkdir("../data", 0755)
 	}
 
 	err = os.WriteFile(filename, []byte(rawCSV), 0644)
@@ -84,10 +86,15 @@ func get_raw_data(c *gocronometer.Client) {
 }
 
 func main() {
+
+	var dFlag = flag.Int("d", 1, "Cronpuller will get the previous d days of data, including today.")
+
+	flag.Parse()
+
 	var c = login()
 	if c == nil {
 		return
 	}
 
-	get_raw_data(c)
+	get_raw_data(c, *dFlag)
 }
