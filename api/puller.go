@@ -62,20 +62,37 @@ func get_raw_data(c *gocronometer.Client, d int) {
 	var start = time.Now().Add(time.Hour * 24 * time.Duration(-d))
 	var end = time.Now().Add(time.Hour * 24)
 	rawCSV, err := c.ExportDailyNutrition(context.Background(), start, end)
+	rawBiometricsCSV, err := c.ExportBiometrics(context.Background(), start, end)
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	var timestamp = time.Now().Format("20060102")
-	var filename = fmt.Sprintf("../data/%s.csv", timestamp)
+	var filename = "../data/nutrition.csv"
 	// check if data directory exists
 	if _, err := os.Stat("../data"); os.IsNotExist(err) {
 		fmt.Println("data directory does not exist")
 		os.Mkdir("../data", 0755)
 	}
 
+	// list all files in data directory
+	files, err := os.ReadDir("../data")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	// delete any existing file
+	for _, file := range files {
+		os.Remove(fmt.Sprintf("../data/%s", file.Name()))
+	}
+
 	err = os.WriteFile(filename, []byte(rawCSV), 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	err = os.WriteFile("../data/biometrics.csv", []byte(rawBiometricsCSV), 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
