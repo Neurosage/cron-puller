@@ -1,4 +1,4 @@
-A script to pull kcal consumption from Cronometer and sync it to a Google Sheets spreadsheet
+A script to pull kcal consumption from [Cronometer](https://cronometer.com/) and sync it to a Google Sheets spreadsheet
 
 Installation:
 
