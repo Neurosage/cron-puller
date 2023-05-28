@@ -8,7 +8,7 @@ Installation:
 
 `pip install -r requirements.txt`
 
-Requirements: golang
+Requirements: [golang](https://go.dev/dl/)
 
 Usage: `python main.py`
 
