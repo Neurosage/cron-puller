@@ -44,8 +44,43 @@ func login() *gocronometer.Client {
 	} else if os.IsNotExist(err) {
 		// file does not exist
 		fmt.Println("user.json does not exist")
-		username = os.Getenv("CRONPULLER_USERNAME")
-		password = os.Getenv("CRONPULLER_PASSWORD")
+		fmt.Println("Should it be created? (y/n)")
+		var response string
+		fmt.Scanln(&response)
+		if response == "y" {
+			fmt.Println("Please enter your Cronometer username/email: ")
+			fmt.Scanln(&username)
+			fmt.Println("Please enter your Cronometer password: ")
+			fmt.Scanln(&password)
+
+			var u = User{
+				CRONPULLER_USERNAME: username,
+				CRONPULLER_PASSWORD: password,
+			}
+
+			b, err_1 := json.Marshal(u)
+			if err_1 != nil {
+				fmt.Println(err_1.Error())
+				return nil
+			}
+
+			err_2 := os.WriteFile(userfile, b, 0644)
+
+			if err_2 != nil {
+				fmt.Println(err_2.Error())
+				return nil
+			}
+		} else {
+			username = os.Getenv("CRONPULLER_USERNAME")
+			password = os.Getenv("CRONPULLER_PASSWORD")
+
+			if username == "" || password == "" {
+				fmt.Println("No user.json and no environment variables set")
+				fmt.Println("Please configure one of these options")
+				return nil
+			}
+		}
+
 	}
 
 	var err = c.Login(context.Background(), username, password)
@@ -62,6 +97,11 @@ func get_raw_data(c *gocronometer.Client, d int) {
 	var start = time.Now().Add(time.Hour * 24 * time.Duration(-d))
 	var end = time.Now().Add(time.Hour * 24)
 	rawCSV, err := c.ExportDailyNutrition(context.Background(), start, end)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	rawBiometricsCSV, err := c.ExportBiometrics(context.Background(), start, end)
 
 	if err != nil {
@@ -72,7 +112,7 @@ func get_raw_data(c *gocronometer.Client, d int) {
 	var filename = "../data/nutrition.csv"
 	// check if data directory exists
 	if _, err := os.Stat("../data"); os.IsNotExist(err) {
-		fmt.Println("data directory does not exist")
+		fmt.Println("data directory does not exist, creating it")
 		os.Mkdir("../data", 0755)
 	}
 

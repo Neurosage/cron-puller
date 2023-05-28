@@ -3,15 +3,31 @@ import os
 import gspread
 import subprocess
 import argparse
+import google
 
 def pull_and_update(days=0, bio=False):
     subprocess.run("cd api && go run puller.go -d {}".format(days), shell=True)
 
-    gc = gspread.oauth()
+    try:
+        gc = gspread.oauth()
+    except (google.auth.exceptions.RefreshError):
+        # delete expired token
+        delete = input("The OAuth token is expired, should it be deleted? (y/n) >> ")
+        if delete == 'y':
+            os.remove("~/.config/gspread/authorized_user.json")
+            gspread.oauth()
+        else:
+            print("Exiting")
+            return
+    except (FileNotFoundError):
+        print("No OAuth token found, please follow the guide here (https://docs.gspread.org/en/latest/oauth2.html#for-end-users-using-oauth-client-id) to generate one.")
+        return
 
     sh = gc.open("Weight")
 
     data_loc = './data/'
+    if (os.path.exists(data_loc) == False):
+        return
 
     biometrics = "biometrics.csv"
     nutrition = "nutrition.csv"
@@ -42,9 +58,10 @@ def pull_and_update(days=0, bio=False):
         
         #put the calories in the cell
         # if c is not None:
-        print(c)
+        
         if c is not None:
             sh.sheet1.update_cell(c.row, c.col + 3, nut_df[cals][i])
+            print("Updated cell {} with {}".format(c, nut_df[cals][i]))
 
     # biometrics
     if(bio):
@@ -80,6 +97,7 @@ def pull_and_update(days=0, bio=False):
 
             if (c is not None):
                 sh.sheet1.update_cell(c.row,c.col+1, bio_df[bio_val][i])
+                print("Updated cell {} with {}".format(c, bio_df[bio_val][i]))
 
 
 
@@ -89,7 +107,7 @@ def init_argparse() -> argparse.ArgumentParser:
     parser.add_argument(
         "--days", "-d", help="Number of days to pull", type=int, default=0)
     parser.add_argument(
-        "--bio", "-b", help="Put biometrics in the sheet", type=bool, default=False)
+        "--bio", "-b", help="Put biometrics in the sheet (true/false)", type=bool, default=False)
     
     return parser
 
